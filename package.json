@@ -1,0 +1,19 @@
+{
+  "name": "net-agent",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/limenghua/net-agent.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/limenghua/net-agent/issues"
+  },
+  "homepage": "https://github.com/limenghua/net-agent#readme"
+}
