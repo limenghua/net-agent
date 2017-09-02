@@ -17,6 +17,10 @@ class ConnectionPool {
         }
     }
 
+    destroye(){
+
+    }
+
     _addOneConnection() {
         let socket = new net.Socket();
         socket.connect(this.servicePort, this.serviceHost);
@@ -68,10 +72,79 @@ class ConnectionPool {
 class ServiceConnection extends EventEmitter {
     constructor() {
         super();
+        this.socketMap = new Map();
+        this.connectionPool = null;
     }
 
     connect(port, host) {
+        this.connectionPool = new ConnectionPool(port,host);
+    }
 
+    close(){
+        
+    }
+
+    dispatch(header,body){
+        let identity = header.identity;
+        let type = header.type;
+
+        switch(type){
+            case 1:
+                this._dispatch(identity,body);
+                break;
+            case 2:
+                this._createConnection(identity);
+                break;
+            case 3:
+                this._deleteConnection(identity);
+                break;
+            default:
+                break;
+        }
+    }
+
+    handleData(socket,data){
+        let identity = socket.identity;
+        let header = {version:1,type:1,identity:identity};
+        this.emit('message',header,data);
+    }
+
+    _dispatch(identity,body){
+        if(! this.socketMap.has(identity)){
+            return _dispatchError(indentity,'no connection exsist');
+        }
+
+        let socket = this.socketMap.get(identity);
+        socket.write(body);
+    }
+
+    _createConnection(identity){
+        let socket = this.connectionPool.pickOneConnection();
+        socket.identity = identity;
+        this.socketMap.set(identity,socket);
+
+        socket.on('end',()=>{
+            this._deleteConnection(identity);
+        })
+        socket.on('error',()=>{
+            this._deleteConnection(identity);
+        });
+        socket.on('data',(data)=>{
+            this.handleData(socket,data);
+        });
+    }
+
+    _deleteConnection(identity){
+        if(! this.socketMap.has(identity)){
+            return _dispatchError(indentity,'no connection exsist when delete');
+        }
+
+        let socket = this.socketMap.get(identity);
+        this.socketMap.delete(identity);
+
+        if(! socket.destroyed){
+            socket.end();
+        }
     }
 
 };

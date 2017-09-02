@@ -3,8 +3,6 @@ const EventEmitter = require('events');
 const ServiceConnection = require('../agent-client/service-connection');
 const ConnectionPool = ServiceConnection.ConnectionPool;
 
-
-
 describe('the service connect pool',function(){
     it('should constrct with service port and host',function(done){
         const echoServer = require('./echo-server');
