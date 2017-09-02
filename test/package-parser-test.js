@@ -27,10 +27,11 @@ describe('the package parser class',function(){
         let length = body.length;
 
         header.fill(0);
-        header.writeUInt16LE(1,0);
-        header.writeUInt16LE(1,2);
+        header.writeUInt8(1,0);
+        header.writeUInt8(1,1);
+        header.writeUInt16LE(5,2)
         header.writeUInt32LE(length,4);
-        header.writeUInt32LE(1,8);
+        header.writeUInt32LE(5,8);
         header.writeUInt32LE(0,12);
 
         let data = Buffer.concat([header,body]);
@@ -56,8 +57,9 @@ describe('the package parser class',function(){
         let length = body.length;
 
         header.fill(0);
-        header.writeUInt16LE(1,0);
-        header.writeUInt16LE(3,2);
+        header.writeUInt8(1,0);
+        header.writeUInt8(3,1);
+        header.writeUInt16LE(5,2)
         header.writeUInt32LE(length,4);
         header.writeUInt32LE(5,8);
         header.writeUInt32LE(0,12);

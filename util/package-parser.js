@@ -80,8 +80,9 @@ class PackageParser extends EventEmitter {
 
     _createHeader() {
         return Struct()
-            .word16Ule('version')
-            .word16Ule('type')
+            .word8('version')
+            .word8('type')
+            .word16Ule('checksum')
             .word32Ule('length')
             .word64Ule('identity');
 
