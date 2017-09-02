@@ -1,6 +1,7 @@
 const net = require('net');
 const should = require('should');
 const AgentClient = require('../agent-client');
+const PackageParser = require('../util/package-parser');
 const AgentConnection = AgentClient.AgentConnection;
 
 function createTestServer(port, datasReturn) {
@@ -28,18 +29,27 @@ describe('the agent connection', function () {
     });
 
     it('should emit "message" event when recvieve data',function(done){
-        createTestServer(8000,['hello']);
+        let body = new Buffer("Hello World");
+        let header = {
+            version: 1,
+            type: 2,
+            checksum: 0,
+            identity: 10
+        };
+
+        let buffer = PackageParser.createPackage(header, body);
+
+        createTestServer(8000,[buffer]);
         const agent = new AgentConnection();
         agent.connect(8000,'127.0.0.1');
 
         agent.on('message',(header,data)=>{
-            header.type.should.eql(0);
-            header.identity.should.eql(1);
-            data.toString().should.eql('hello');
+            header.version.should.eql(1);
+            header.type.should.eql(2);
+            header.identity.should.eql(10);
+            data.toString().should.eql('Hello World');
             done();
         });
-
-        //done();
     });
 
 });

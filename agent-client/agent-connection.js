@@ -1,14 +1,13 @@
 const net = require('net');
 const EventEmitter = require('events');
-const Struct = require('struct');
+const PackageParser = require('../util/package-parser');
 
 class AgentConnection extends EventEmitter {
     constructor() {
         super();
         this._socket = new net.Socket();
-        this._header = this._createHeader();
-        this._state = 'wait-header';
-        this._needByte = 0;
+        this._packageParser = new PackageParser();
+
     }
 
     connect(port, address) {
@@ -18,41 +17,37 @@ class AgentConnection extends EventEmitter {
             this._init();
             this.emit('connect');
         });
+
+        this._packageParser.on('message',(header,data)=>{
+            this.emit('message',header,data);
+        });
     }
 
-    _handleData(data) {
-
-        let header = {
-            type: 0,
-            identity: 1
-        };
-
-        this.emit('message', header, data);
-    }
 
     dispatch(header, data) {
-
+        let buffer = PackageParser.createPackage(header,data);
+        this._socket.write(buffer);
     }
 
     _init() {
+        this.on('data',(data)=>{
+            this._packageParser.handleData(data);
+        });
+
         this._socket.on('data', (data) => {
-            this._handleData(data);
+            this.emit('data',data);
         });
+
         this._socket.on('end', () => {
-
+            console.log('socket end.');
         });
+
         this._socket.on('error', (err) => {
-
+            console.log('socket error:',error);
         });
 
     }
 
-    _createHeader() {
-        return Struct()
-            .word8('type')
-            .word32Ule('lenght')
-            .word64Ule('identity');
-    }
 }
 
 module.exports = AgentConnection;

@@ -5,7 +5,7 @@ const Struct = require('struct');
 /*
     0       8         16       24       32
     |--------|--------|--------|--------|
-    |    version      |       type      |
+    |version |  type  |   checksum      |
     |       body lenght                 |
     |          identity...              |
     |          identity                 |
@@ -78,19 +78,19 @@ class PackageParser extends EventEmitter {
         }, body);
     }
 
-    static createPackage(header,body){
+    static createPackage(header, body) {
         let headerStruct = this.createHeader();
         headerStruct.allocate();
 
-        headerStruct.set('version',header.version);
-        headerStruct.set('type',header.type);
-        headerStruct.set('checksum',0);
-        headerStruct.set('length',body.length);        
-        headerStruct.set('identity',header.identity);
+        headerStruct.set('version', header.version);
+        headerStruct.set('type', header.type);
+        headerStruct.set('checksum', 0);
+        headerStruct.set('length', body.length);
+        headerStruct.set('identity', header.identity);
 
         let headerBuffer = headerStruct.buffer();
 
-        return Buffer.concat([headerBuffer,body]);
+        return Buffer.concat([headerBuffer, body]);
     }
 
     static createHeader() {
