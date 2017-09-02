@@ -15,7 +15,7 @@ class PackageParser extends EventEmitter {
     constructor() {
         super();
         this._state = 'wait-header'; //'wait-header' || 'wait-body'        
-        this._header = this._createHeader();
+        this._header = PackageParser.createHeader();
         this._header.allocate();
         this._headerBuffer = this._header.buffer();
         this._headerBuffer.fill(0);
@@ -78,7 +78,22 @@ class PackageParser extends EventEmitter {
         }, body);
     }
 
-    _createHeader() {
+    static createPackage(header,body){
+        let headerStruct = this.createHeader();
+        headerStruct.allocate();
+
+        headerStruct.set('version',header.version);
+        headerStruct.set('type',header.type);
+        headerStruct.set('checksum',0);
+        headerStruct.set('length',body.length);        
+        headerStruct.set('identity',header.identity);
+
+        let headerBuffer = headerStruct.buffer();
+
+        return Buffer.concat([headerBuffer,body]);
+    }
+
+    static createHeader() {
         return Struct()
             .word8('version')
             .word8('type')
