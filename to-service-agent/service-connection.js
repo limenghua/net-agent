@@ -6,19 +6,20 @@ const PackageType = PackageParser.PackageType;
 class ConnectionPool extends EventEmitter{
     constructor(port, host, opt) {
         super();
-        
+
         this.servicePort = port;
         this.serviceHost = host;
         this.opt = opt || {};
+        this.opt.poolSize = this.opt.poolSize || 100;
 
         this.sockets = new Set();
-        this.poolSize = this.opt.poolSize || 100;
+
 
         this.started = false;
     }
 
     create() {
-        for (let i = 0; i < this.poolSize; i++) {
+        for (let i = 0; i < this.opt.poolSize; i++) {
             this._addOneConnection();
         }
     }
@@ -34,14 +35,14 @@ class ConnectionPool extends EventEmitter{
     }
 
     _addOneConnection() {
-        if(this.sockets.size >= this.poolSize)return;
+        if(this.sockets.size >= this.opt.poolSize)return;
 
         let socket = new net.Socket();
         socket.connect(this.servicePort, this.serviceHost);
         socket.on('connect', () => {
             //console.log('socket connected');
             this.sockets.add(socket);
-            if(! this.started && this.sockets.size === this.poolSize){
+            if(! this.started && this.sockets.size === this.opt.poolSize){
                 this.started = true;
                 this.emit('ready');
             }
@@ -97,6 +98,10 @@ class ServiceConnection extends EventEmitter {
 
     connect(port, host) {
         this.connectionPool = new ConnectionPool(port,host);
+        this.connectionPool.create();
+        this.connectionPool.on('ready',()=>{
+            this.emit('ready');
+        });
     }
 
     close(){
@@ -155,7 +160,7 @@ class ServiceConnection extends EventEmitter {
 
     _deleteConnection(identity){
         if(! this.socketMap.has(identity)){
-            return _dispatchError(indentity,'no connection exsist when delete');
+            return this._dispatchError(identity,'no connection exsist when delete');
         }
 
         let socket = this.socketMap.get(identity);

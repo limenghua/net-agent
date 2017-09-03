@@ -13,7 +13,7 @@ describe('the package parser class', function () {
     /*
         0       8         16       24       32
         |--------|--------|--------|--------|
-        |    version      |       type      |
+        |version |  type  |   checksum      |
         |       body lenght                 |
         |          identity...              |
         |          identity                 |
