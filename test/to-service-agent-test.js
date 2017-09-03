@@ -16,7 +16,7 @@ function createTestServer(port, datasReturn) {
 
         socket.on('data',(data)=>{
             server.emit('socketdata',socket,data);
-        });       
+        });
     });
 
     server.listen(port);
