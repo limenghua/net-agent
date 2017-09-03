@@ -1,6 +1,8 @@
 const EventEmitter = require('events');
 const Struct = require('struct');
 
+
+
 //package struct
 /*
     0       8         16       24       32
@@ -103,5 +105,11 @@ class PackageParser extends EventEmitter {
 
     }
 }
+PackageParser.PackageType = {
+    DATA: 1,
+    CONNECTED: 2,
+    DISCONNECTED: 3,
+    ERROR: 4
+};
 
 module.exports = PackageParser;

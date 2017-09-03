@@ -1,6 +1,6 @@
 const should = require('should');
 const EventEmitter = require('events');
-const ServiceConnection = require('../agent-client/service-connection');
+const ServiceConnection = require('../to-service-agent/service-connection');
 const ConnectionPool = ServiceConnection.ConnectionPool;
 
 describe('the service connect pool',function(){
@@ -11,7 +11,7 @@ describe('the service connect pool',function(){
 
         connectionPool.create();
 
-        setTimeout(()=>{
+        connectionPool.on('ready',()=>{
             let poolSize = connectionPool.connectionSize();
             poolSize.should.eql(100);
 
@@ -23,9 +23,9 @@ describe('the service connect pool',function(){
 
             socket.end();
             server.close();
+            connectionPool.destroye();
             done();
-        },200);
-
+        });
 
     });
 
@@ -35,5 +35,6 @@ describe('the service connect pool',function(){
 describe('the service-connection',function(){
     it('construct shoud be instance of EventEmitter',function(){
         const serviceConnect = new ServiceConnection();
-    })
+        serviceConnect.should.be.instanceof(EventEmitter);
+    });
 });

@@ -1,14 +1,20 @@
 const net = require('net');
 const EventEmitter = require('events');
+const PackageParser = require('../util/package-parser');
+const PackageType = PackageParser.PackageType;
 
-class ConnectionPool {
+class ConnectionPool extends EventEmitter{
     constructor(port, host, opt) {
+        super();
+        
         this.servicePort = port;
         this.serviceHost = host;
         this.opt = opt || {};
 
         this.sockets = new Set();
         this.poolSize = this.opt.poolSize || 100;
+
+        this.started = false;
     }
 
     create() {
@@ -18,32 +24,45 @@ class ConnectionPool {
     }
 
     destroye(){
+        for(let socket of this.sockets){
+            if(! socket.destroyed){
+                socket.destroy();
+            }
+        }
 
+        this.sockets.clear();
     }
 
     _addOneConnection() {
+        if(this.sockets.size >= this.poolSize)return;
+
         let socket = new net.Socket();
         socket.connect(this.servicePort, this.serviceHost);
         socket.on('connect', () => {
             //console.log('socket connected');
             this.sockets.add(socket);
+            if(! this.started && this.sockets.size === this.poolSize){
+                this.started = true;
+                this.emit('ready');
+            }
         });
 
         socket.on('end', () => {
-            if (this.sockets.has(socket)) {
-                this.sockets.delete(socket);
-                this._addOneConnection();
-            }
+            this.sockets.delete(socket);
+            setTimeout(()=> {
+                this._addOneConnection();      
+            }, 100); 
 
             console.log('socket end');
 
         });
 
         socket.on('error', (err) => {
-            if (this.sockets.has(socket)) {
-                this.sockets.delete(socket);
-                this._addOneConnection();
-            }
+            this.sockets.delete(socket);
+            setTimeout(()=> {
+                this._addOneConnection();      
+            }, 100); 
+
             console.log('socket error:',err);
         });
     }
@@ -89,13 +108,13 @@ class ServiceConnection extends EventEmitter {
         let type = header.type;
 
         switch(type){
-            case 1:
+            case PackageType.DATA:
                 this._dispatch(identity,body);
                 break;
-            case 2:
+            case PackageType.CONNECTED:
                 this._createConnection(identity);
                 break;
-            case 3:
+            case PackageType.DISCONNECTED:
                 this._deleteConnection(identity);
                 break;
             default:
@@ -103,7 +122,7 @@ class ServiceConnection extends EventEmitter {
         }
     }
 
-    handleData(socket,data){
+    _handleData(socket,data){
         let identity = socket.identity;
         let header = {version:1,type:1,identity:identity};
         this.emit('message',header,data);
@@ -130,7 +149,7 @@ class ServiceConnection extends EventEmitter {
             this._deleteConnection(identity);
         });
         socket.on('data',(data)=>{
-            this.handleData(socket,data);
+            this._handleData(socket,data);
         });
     }
 
@@ -145,6 +164,10 @@ class ServiceConnection extends EventEmitter {
         if(! socket.destroyed){
             socket.end();
         }
+    }
+
+    _dispatchError(identity,err){
+
     }
 
 };

@@ -1,6 +1,6 @@
 const net = require('net');
 const should = require('should');
-const AgentClient = require('../agent-client');
+const AgentClient = require('../to-service-agent');
 const PackageParser = require('../util/package-parser');
 const AgentConnection = AgentClient.AgentConnection;
 
