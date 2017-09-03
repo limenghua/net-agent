@@ -5,13 +5,16 @@ function createServer(port) {
     server.listen(port);
 
     server.on('connection', (socket) => {
-		console.log('new connection');
+		//console.log('new connection');
         socket.on('data',(data)=>{
-			console.log('recv data:',data.toString());
+			//console.log('recv data:',data.toString());
 			socket.write(data);
 		});
 		socket.on('close',()=>{
-			console.log('connection closed');
+			//console.log('connection closed');
+		});
+		socket.on('error',(err)=>{
+			console.log('error:',err);
 		});
     });
 

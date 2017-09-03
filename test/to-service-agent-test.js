@@ -1,5 +1,6 @@
 const net = require('net');
 const should = require('should');
+const EchoServer =  require('./echo-server');
 const PackageParser = require('../util/package-parser');
 const PackageType = PackageParser.PackageType;
 
@@ -33,16 +34,27 @@ describe('the service-agent',function(){
         let dataBuffer = PackageParser.createPackage(dataHeader,"Hello World");
         let disconnectBuffer = PackageParser.createPackage(disconnectHeader,"");
 
-        // const agentMockServer = createTestServer(6001,[connectBuffer,dataBuffer,disconnectBuffer]);
+        const echoServer = EchoServer.createServer(9000);
+        const agentMockServer = createTestServer(6001,[connectBuffer,dataBuffer,disconnectBuffer]);
 
-        // const agent = ServiceAgent.createAgent(9000,'127.0.0.1',6001,'127.0.0.1');
-        // agent.start();
+        const agent = ServiceAgent.createAgent(9000,'127.0.0.1',6001,'127.0.0.1');
+        agent.start();
 
-        // agentMockServer.on('socketdata',(socket,data)=>{
-        //      done();        
-        // });
+        let packageParser = new PackageParser();
 
-        done();  
+        agentMockServer.on('socketdata',(socket,data)=>{
+            packageParser.handleData(data);
+        });
+
+        packageParser.on('message',(header,body)=>{
+            header.type.should.eql(PackageType.DATA);
+            header.identity.should.eql(1);
+            body.toString().should.eql('Hello World');
+
+            agent.stop();
+            echoServer.close();
+            done();
+        });
 
     });
 
