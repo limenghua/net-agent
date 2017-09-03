@@ -23,6 +23,10 @@ class AgentConnection extends EventEmitter {
         });
     }
 
+    close(){
+        this._socket.end();
+    }
+
 
     dispatch(header, data) {
         let buffer = PackageParser.createPackage(header,data);

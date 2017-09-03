@@ -1,8 +1,8 @@
 const net = require('net');
 const should = require('should');
-const AgentClient = require('../to-service-agent');
+const AgentConnection = require('../to-service-agent/agent-connection');
 const PackageParser = require('../util/package-parser');
-const AgentConnection = AgentClient.AgentConnection;
+
 
 function createTestServer(port, datasReturn) {
     const server = net.createServer();

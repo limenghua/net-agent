@@ -1,5 +1,6 @@
 const should = require('should')
 const PackageParser = require('../util/package-parser');
+const PackageType = PackageParser.PackageType;
 
 describe('the package parser class', function () {
     it('shoud construct', function () {
@@ -191,6 +192,34 @@ describe('the package parser class', function () {
 
         packageParser.handleData(buffer);
 
+    });
+
+    it('should create package using Buffer or string',function(){
+
+        let body = "Hello World";
+        let header = {
+            version: 1,
+            type: PackageType.DATA,
+            checksum: 0,
+            identity: 10
+        };
+
+        let buffer = PackageParser.createPackage(header, body);
+
+        let version = buffer.readUInt8(0);
+        let type = buffer.readUInt8(1);
+        let checksum = buffer.readUInt16LE(2);
+        let length = buffer.readUInt32LE(4);
+        let identity = buffer.readUInt32LE(8);
+
+        version.should.be.eql(1);
+        type.should.be.eql(PackageType.DATA);
+        checksum.should.be.eql(0);
+        length.should.be.eql(body.length);
+        identity.should.be.eql(10);
+
+        let bodyOfBuffer = buffer.slice(16);
+        bodyOfBuffer.toString().should.be.eql("Hello World");        
     });
 
 

@@ -81,6 +81,9 @@ class PackageParser extends EventEmitter {
     }
 
     static createPackage(header, body) {
+        if(typeof body === 'string'){
+            body = new Buffer(body);
+        }
         let headerStruct = this.createHeader();
         headerStruct.allocate();
 

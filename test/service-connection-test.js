@@ -40,7 +40,7 @@ describe('the service-connection',function(){
         serviceConnect.should.be.instanceof(EventEmitter);
     });
 
-    it('shoud be route the package from service and client',function(done){
+    it('shoud route the package from service and client',function(done){
         const server = echoServer.createServer(8001);
         const serviceConnect = new ServiceConnection();
         serviceConnect.connect(8001,'127.0.0.1');
@@ -48,7 +48,6 @@ describe('the service-connection',function(){
         serviceConnect.on('ready',()=>{
             let connectHeader = {version:1,type:PackageType.CONNECTED,identity:1};
             let dataHeader = {version:1,type:PackageType.DATA,identity:1};
-
 
             serviceConnect.dispatch(connectHeader,"");
             serviceConnect.dispatch(dataHeader,"Hello World");
@@ -58,9 +57,12 @@ describe('the service-connection',function(){
             header.identity.should.eql(1);
 
             body.toString().should.eql('Hello World');
-            
+
             let disConnectHeader = {version:1,type:PackageType.DISCONNECTED,identity:1};
             serviceConnect.dispatch(disConnectHeader,"");
+
+            server.close();
+            serviceConnect.close();
             done();
         });
 

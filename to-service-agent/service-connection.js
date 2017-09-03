@@ -105,7 +105,8 @@ class ServiceConnection extends EventEmitter {
     }
 
     close(){
-        
+        this.connectionPool.destroye();
+        this.started = false;
     }
 
     dispatch(header,body){
@@ -129,7 +130,7 @@ class ServiceConnection extends EventEmitter {
 
     _handleData(socket,data){
         let identity = socket.identity;
-        let header = {version:1,type:1,identity:identity};
+        let header = {version:1,type:PackageType.DATA,identity:identity};
         this.emit('message',header,data);
     }
 
