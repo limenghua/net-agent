@@ -48,6 +48,8 @@ describe('the agent connection', function () {
             header.type.should.eql(2);
             header.identity.should.eql(10);
             data.toString().should.eql('Hello World');
+
+            agent.close();
             done();
         });
     });
