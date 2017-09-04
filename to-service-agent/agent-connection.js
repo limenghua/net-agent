@@ -1,6 +1,7 @@
 const net = require('net');
 const EventEmitter = require('events');
 const PackageParser = require('../util/package-parser');
+const logger = require('../util/logger');
 
 class AgentConnection extends EventEmitter {
     constructor() {
@@ -29,6 +30,7 @@ class AgentConnection extends EventEmitter {
 
 
     dispatch(header, data) {
+        logger.headerlog(header,'agent-connection');
         let buffer = PackageParser.createPackage(header,data);
         this._socket.write(buffer);
     }

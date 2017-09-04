@@ -2,6 +2,7 @@ const net = require('net');
 const EventEmitter = require('events');
 const PackageParser = require('../util/package-parser');
 const PackageType = PackageParser.PackageType;
+const logger = require('../util/logger');
 
 class ConnectionPool extends EventEmitter{
     constructor(port, host, opt) {
@@ -109,6 +110,7 @@ class ServiceConnection extends EventEmitter {
     }
 
     dispatch(header,body){
+        logger.headerlog(header,'service-connection');
         let identity = header.identity;
         let type = header.type;
 

@@ -2,6 +2,7 @@ const net = require('net');
 const EventEmitter = require('events');
 const PackageParser = require('../util/package-parser');
 const PackageType = PackageParser.PackageType;
+const logger = require('../util/logger');
 
 let nextIdentity = 1;
 
@@ -51,6 +52,7 @@ class LocalConnection extends EventEmitter{
     }
 
     dispatch(header,body){
+        logger.headerlog(header,'local-connection');        
         let identity = header.identity;
         let type = header.type;
 

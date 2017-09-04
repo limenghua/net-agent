@@ -2,6 +2,7 @@ const net = require('net');
 const EventEmitter = require('events');
 const PackageParser = require('../util/package-parser');
 const PackageType = PackageParser.PackageType;
+const logger = require('../util/logger')
 
 class RemoteConnection extends EventEmitter{
     constructor(port){
@@ -32,6 +33,7 @@ class RemoteConnection extends EventEmitter{
     }
 
     dispatch(header,body){
+        logger.headerlog(header,'remote-connection');
         let identity = header.identity;
         const data = PackageParser.createPackage(header,body);
 
