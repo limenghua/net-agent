@@ -61,7 +61,7 @@ class LocalConnection extends EventEmitter{
             this._dispatch(identity,body);
             break;
         case PackageType.DISCONNECTED:
-            _disconnect(identity);    
+            _disconnect(identity);
             break;
         };
     }

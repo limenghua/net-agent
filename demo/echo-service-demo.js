@@ -1,5 +1,9 @@
 const net = require('net');
 
+let args = process.argv.splice(2);
+let port = parseInt(args) || 6000;
+
+
 let index = 1;
 
 function createServer() {
@@ -21,12 +25,9 @@ function createServer() {
     });
 
     server.on('error',(err)=>{console.log("err:",err);});
-
-
-
     return server;
 }
 
 let server = createServer();
-server.listen(6000);
-console.log('echo service listen on 6000');
+server.listen(port);
+console.log('echo service listen on ',port);
