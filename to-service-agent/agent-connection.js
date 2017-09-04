@@ -47,7 +47,7 @@ class AgentConnection extends EventEmitter {
         });
 
         this._socket.on('error', (err) => {
-            console.log('socket error:',error);
+            console.log('socket error:',err);
         });
 
     }

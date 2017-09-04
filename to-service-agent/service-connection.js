@@ -14,7 +14,6 @@ class ConnectionPool extends EventEmitter{
 
         this.sockets = new Set();
 
-
         this.started = false;
     }
 
@@ -136,7 +135,7 @@ class ServiceConnection extends EventEmitter {
 
     _dispatch(identity,body){
         if(! this.socketMap.has(identity)){
-            return _dispatchError(indentity,'no connection exsist');
+            return this._dispatchError(indentity,'no connection exsist');
         }
 
         let socket = this.socketMap.get(identity);
