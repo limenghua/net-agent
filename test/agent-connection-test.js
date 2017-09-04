@@ -39,9 +39,9 @@ describe('the agent connection', function () {
 
         let buffer = PackageParser.createPackage(header, body);
 
-        createTestServer(8000,[buffer]);
+        createTestServer(9000,[buffer]);
         const agent = new AgentConnection();
-        agent.connect(8000,'127.0.0.1');
+        agent.connect(9000,'127.0.0.1');
 
         agent.on('message',(header,data)=>{
             header.version.should.eql(1);
