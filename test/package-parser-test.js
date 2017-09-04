@@ -82,6 +82,34 @@ describe('the package parser class', function () {
 
     });
 
+    it('shoud can parse one package witch body is empty(length is zero)', function (done) {
+        let header = new Buffer(16);
+        let length = 0;
+        let body = "";
+
+        header.fill(0);
+        header.writeUInt8(1, 0);
+        header.writeUInt8(3, 1);
+        header.writeUInt16LE(5, 2)
+        header.writeUInt32LE(length, 4);
+        header.writeUInt32LE(5, 8);
+        header.writeUInt32LE(0, 12);
+
+        const packageParser = new PackageParser();
+        packageParser.on('message', (header, body) => {
+            header.version.should.eql(1);
+            header.type.should.eql(3);
+            header.identity.should.eql(5);
+
+            body.length.should.eql(length);
+            body.toString().should.eql("");
+
+            done();
+        });
+
+        packageParser.handleData(header);
+    });
+
     it('should create one buffer use "header" and "body"', function () {
         let body = new Buffer("Hello World");
         let header = {

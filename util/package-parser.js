@@ -42,7 +42,7 @@ class PackageParser extends EventEmitter {
             this._state = 'wait-body';
             this._waitBytes = this._header.get('length');
 
-            if (bytesConsumed < data.length) {
+            if (bytesConsumed < data.length || this._waitBytes===0) {
                 return this._handleBody(data.slice(bytesConsumed));
             }
         } else {
