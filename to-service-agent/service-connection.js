@@ -4,7 +4,22 @@ const PackageParser = require('../util/package-parser');
 const PackageType = PackageParser.PackageType;
 const logger = require('../util/logger');
 
+
+/**
+ * The tcp connection pool,to prepare many connection for after use.
+ * 
+ * @class ConnectionPool
+ * @extends {EventEmitter}
+ */
 class ConnectionPool extends EventEmitter{
+
+    /**
+     * Creates an instance of ConnectionPool.
+     * @param {number} port of the service to connect
+     * @param {string} host of the service to connect,use ip address
+     * @param {object} option  {opt.poolSize:default 100}
+     * @memberof ConnectionPool
+     */
     constructor(port, host, opt) {
         super();
 
@@ -18,12 +33,22 @@ class ConnectionPool extends EventEmitter{
         this.started = false;
     }
 
+    /**
+     * create connections and connect to service
+     * 
+     * @memberof ConnectionPool
+     */
     create() {
         for (let i = 0; i < this.opt.poolSize; i++) {
             this._addOneConnection();
         }
     }
 
+    /**
+     * disconnect all connections
+     * 
+     * @memberof ConnectionPool
+     */
     destroye(){
         for(let socket of this.sockets){
             if(! socket.destroyed){
@@ -67,7 +92,14 @@ class ConnectionPool extends EventEmitter{
             console.log('socket error:',err);
         });
     }
+    
 
+    /**
+     * pick one connection in the pool,delete connection from pool and create new one put into it.
+     * 
+     * @returns net.Socket
+     * @memberof ConnectionPool
+     */
     pickOneConnection() {
         let socket = null;
         for (let sock of this.sockets) {
@@ -84,31 +116,72 @@ class ConnectionPool extends EventEmitter{
         return socket;
     }
 
+
+    /**
+     * the count of connections witch in use.
+     * 
+     * @returns number
+     * @memberof ConnectionPool
+     */
     connectionSize() {
         return this.sockets.size;
     }
 }
 
+
+/**
+ * the service connection manager.
+ * contain many connection to the certain service, ex some server
+ * 
+ * @class ServiceConnection
+ * @extends {EventEmitter}
+ */
 class ServiceConnection extends EventEmitter {
     constructor() {
         super();
-        this.socketMap = new Map();
-        this.connectionPool = null;
+        this._socketMap = new Map();
+        this._connectionPool = null;
     }
 
+
+    /**
+     * connect to the service
+     * 
+     * @param {number} port of service 
+     * @param {string} host of service,in normal ,is the ip address.
+     * @memberof ServiceConnection
+     */
     connect(port, host) {
-        this.connectionPool = new ConnectionPool(port,host);
-        this.connectionPool.create();
-        this.connectionPool.on('ready',()=>{
+        this._connectionPool = new ConnectionPool(port,host);
+        this._connectionPool.create();
+        this._connectionPool.on('ready',()=>{
             this.emit('ready');
         });
     }
 
+    
+    /**
+     * close all connection,and destroy the connection pool.
+     * 
+     * @memberof ServiceConnection
+     */
     close(){
-        this.connectionPool.destroye();
-        this.started = false;
+        this._connectionPool.destroye();
+        this._started = false;
+
+        for(let [identity,socket] of this._socketMap){
+            socket.end();
+        }
     }
 
+
+    /**
+     * dispatch the package witch recieve from extenal 
+     * 
+     * @param {object} header 
+     * @param {Buffer | string} body 
+     * @memberof ServiceConnection
+     */
     dispatch(header,body){
         logger.headerlog(header,'service-connection');
         let identity = header.identity;
@@ -136,18 +209,18 @@ class ServiceConnection extends EventEmitter {
     }
 
     _dispatch(identity,body){
-        if(! this.socketMap.has(identity)){
+        if(! this._socketMap.has(identity)){
             return this._dispatchError(indentity,'no connection exsist');
         }
 
-        let socket = this.socketMap.get(identity);
+        let socket = this._socketMap.get(identity);
         socket.write(body);
     }
 
     _createConnection(identity){
-        let socket = this.connectionPool.pickOneConnection();
+        let socket = this._connectionPool.pickOneConnection();
         socket.identity = identity;
-        this.socketMap.set(identity,socket);
+        this._socketMap.set(identity,socket);
 
         socket.on('end',()=>{
             this._deleteConnection(identity);
@@ -161,12 +234,12 @@ class ServiceConnection extends EventEmitter {
     }
 
     _deleteConnection(identity){
-        if(! this.socketMap.has(identity)){
+        if(! this._socketMap.has(identity)){
             return this._dispatchError(identity,'no connection exsist when delete');
         }
 
-        let socket = this.socketMap.get(identity);
-        this.socketMap.delete(identity);
+        let socket = this._socketMap.get(identity);
+        this._socketMap.delete(identity);
 
         if(! socket.destroyed){
             socket.end();
