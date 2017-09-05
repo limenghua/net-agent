@@ -1,9 +1,9 @@
 const should = require('should');
 const EventEmitter = require('events');
-const ServiceConnection = require('../to-service-agent/service-connection');
+const ServiceConnection = require('../../to-service-agent/service-connection');
 const ConnectionPool = ServiceConnection.ConnectionPool;
-const echoServer = require('./echo-server');
-const PackageType = require('../util/package-parser').PackageType;
+const echoServer = require('../echo-server');
+const PackageType = require('../../util/package-parser').PackageType;
 
 describe('the service connect pool',function(){
     it('should constrct with service port and host',function(done){
