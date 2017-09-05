@@ -3,6 +3,12 @@ const EventEmitter = require('events');
 const PackageParser = require('../util/package-parser');
 const logger = require('../util/logger');
 
+/**
+ * mananger all connections, witch connect to the agent in the cloud side
+ * 
+ * @class AgentConnection
+ * @extends {EventEmitter}
+ */
 class AgentConnection extends EventEmitter {
     constructor() {
         super();
@@ -11,6 +17,13 @@ class AgentConnection extends EventEmitter {
 
     }
 
+    /**
+     * connect to the agent in cloud side.
+     * 
+     * @param {int} port - port of the agent listen on 
+     * @param {any} address - ip address of the agent
+     * @memberof AgentConnection
+     */
     connect(port, address) {
         this._socket.connect(port, address);
 
@@ -24,11 +37,22 @@ class AgentConnection extends EventEmitter {
         });
     }
 
+    /**
+     * close the connection.
+     * 
+     * @memberof AgentConnection
+     */
     close(){
         this._socket.end();
     }
 
-
+    /**
+     * dispatch the pakage to the agent.
+     *  
+     * @param {object} header 
+     * @param {Buffer|string} data 
+     * @memberof AgentConnection
+     */
     dispatch(header, data) {
         logger.headerlog(header,'agent-connection');
         let buffer = PackageParser.createPackage(header,data);

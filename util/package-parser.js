@@ -3,17 +3,27 @@ const Struct = require('struct');
 
 
 
-//package struct
-/*
-    0       8         16       24       32
-    |--------|--------|--------|--------|
-    |version |  type  |   checksum      |
-    |       body lenght                 |
-    |          identity...              |
-    |          identity                 |
-    |          user data body...        | 
-*/
+/**
+ * the Package parser.
+ *  package struct.
+ *  <ul>
+ *<li>     0       8         16       24       32.
+ *<li>    |--------|--------|--------|--------|.
+ *<li>    |version |  type  |   checksum      |.
+ *<li>    |       body lenght                 |.
+ *<li>    |          identity...              |.
+ *<li>    |          identity                 |.
+ *<li>    |          user data body...        | .
+ * </ul>
+ * 
+ * @class PackageParser
+ * @extends {EventEmitter}
+ */
 class PackageParser extends EventEmitter {
+    /**
+     * Creates an instance of PackageParser.
+     * @memberof PackageParser
+     */
     constructor() {
         super();
         this._state = 'wait-header'; //'wait-header' || 'wait-body'        
@@ -25,6 +35,13 @@ class PackageParser extends EventEmitter {
         this._waitBytes = this._headerLength;
     }
 
+    /**
+     * handle the input data
+     * 
+     * @param {Buffer | string} data 
+     * @returns null
+     * @memberof PackageParser
+     */
     handleData(data) {
         if (this._state === 'wait-header') {
             return this._handleHeader(data);
@@ -73,6 +90,16 @@ class PackageParser extends EventEmitter {
         let type = header.get('type');
         let identity = header.get('identity');
 
+        
+        /**
+         * message event.
+         *
+         * @event PackageParser#message
+         * @type {object|Buffer}
+         * @property {number} version - version of the protocol.
+         * @property {number} type - type of the package,value may(DATA:1,CONNECT:2,DISCONNECT:3)
+         * @property {number} identity - the identity of the comunity socket.
+         */      
         this.emit('message', {
             version: version,
             type: type,
@@ -80,6 +107,15 @@ class PackageParser extends EventEmitter {
         }, body);
     }
 
+    /**
+     * create on package use header and body
+     * 
+     * @static
+     * @param {object} header - the package header 
+     * @param {Buffer|string} body - the package body
+     * @returns Buffer - new Package as Buffer
+     * @memberof PackageParser
+     */
     static createPackage(header, body) {
         if(typeof body === 'string'){
             body = new Buffer(body);
@@ -98,6 +134,13 @@ class PackageParser extends EventEmitter {
         return Buffer.concat([headerBuffer, body]);
     }
 
+    /**
+     * create a package header struct.
+     * 
+     * @static
+     * @returns one struct of a empty header.
+     * @memberof PackageParser
+     */
     static createHeader() {
         return Struct()
             .word8('version')
@@ -108,6 +151,13 @@ class PackageParser extends EventEmitter {
 
     }
 }
+
+/**
+ * Enum for package types.
+ * @readonly
+ * @enum {number}
+ * @memberof PackageParser
+ */
 PackageParser.PackageType = {
     DATA: 1,
     CONNECTED: 2,

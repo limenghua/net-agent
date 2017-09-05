@@ -1,0 +1,24 @@
+{
+    "tags": {
+        "allowUnknownTags": true, // 允许使用自定义tag
+        "dictionaries": ["jsdoc", "closure"] // 定义tag集
+    },
+    "source": {
+        "includePattern": ".+\\.js(doc)?$", // 将以.js, .jsdoc结尾的文件作为源文件
+        "excludePattern": "(^|\\/|\\\\)_", // 忽略以_开头的文件夹及文件
+        "exclude":["node_modules"]
+    },
+    "plugins": [],
+    "templates": {
+        "cleverLinks": false,
+        "monospaceLinks": false
+    },
+    "opts": {
+        "template": "templates/default", // same as -t templates/default
+        "encoding": "utf8", // same as -e utf8
+        "destination": "./doc/", // same as -d ./out/
+        "recurse": true // same as -r
+        //"tutorials": "path/to/tutorials" // same as -u path/to/tutorials
+    }
+
+}

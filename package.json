@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "mocha --recursive",
-    "start":"cd demo && start.bat"
+    "start":"cd demo && start.bat",
+    "doc":"jsdoc -c jsdoc.json ."
   },
   "repository": {
     "type": "git",
