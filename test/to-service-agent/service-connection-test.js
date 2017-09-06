@@ -53,7 +53,7 @@ describe('the service-connection',function(){
             serviceConnect.dispatch(dataHeader,"Hello World");
         });
 
-        serviceConnect.on('message',(header,body)=>{
+        serviceConnect.on('message',({header,body})=>{
             header.identity.should.eql(1);
 
             body.toString().should.eql('Hello World');

@@ -20,7 +20,7 @@ describe('ToClientAgent LocalConnection',function(){
         let localConnection = new LocalConnection(4000);
         localConnection.start();
 
-        localConnection.on('message',(header,body)=>{
+        localConnection.on('message',({header,body})=>{
             header.version.should.be.eql(1);
             header.type.should.be.eql(PackageType.CONNECTED);
             header.checksum.should.eql(0);
@@ -41,7 +41,7 @@ describe('ToClientAgent LocalConnection',function(){
 
         let expectType = PackageType.CONNECTED;
 
-        localConnection.on('message',(header,body)=>{
+        localConnection.on('message',({header,body})=>{
             header.version.should.be.eql(1);
             header.type.should.be.eql(expectType);
             header.checksum.should.eql(0);

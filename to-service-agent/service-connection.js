@@ -205,7 +205,7 @@ class ServiceConnection extends EventEmitter {
     _handleData(socket,data){
         let identity = socket.identity;
         let header = {version:1,type:PackageType.DATA,identity:identity};
-        this.emit('message',header,data);
+        this.emit('message',{header:header,body:data});
     }
 
     _dispatch(identity,body){

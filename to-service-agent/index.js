@@ -37,11 +37,11 @@ class ServiceAgent {
 
         this._serviceConnection.on('ready', () => {
             this._agentConnection.connect(this.agentPort, this.agentHost);
-            this._agentConnection.on('message', (header, body) => {
+            this._agentConnection.on('message', ({header, body}) => {
                 this._serviceConnection.dispatch(header, body);
             });
 
-            this._serviceConnection.on('message', (header, body) => {
+            this._serviceConnection.on('message', ({header, body}) => {
                 this._agentConnection.dispatch(header, body);
             });
 

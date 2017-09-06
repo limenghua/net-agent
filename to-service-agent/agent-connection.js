@@ -32,8 +32,8 @@ class AgentConnection extends EventEmitter {
             this.emit('connect');
         });
 
-        this._packageParser.on('message',(header,data)=>{
-            this.emit('message',header,data);
+        this._packageParser.on('message',(message)=>{
+            this.emit('message',message);
         });
     }
 

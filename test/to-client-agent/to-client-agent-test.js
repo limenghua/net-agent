@@ -26,7 +26,7 @@ describe('the ClientAgent',function(){
         remoteSocket.on('data',(data)=>{
             packageParser.handleData(data);
         });
-        packageParser.on('message',(header,body)=>{
+        packageParser.on('message',({header,body})=>{
             if(header.type === PackageType.DATA){
                 body.toString().should.eql("Hello World1");
                 agent.stop();

@@ -47,8 +47,8 @@ class RemoteConnection extends EventEmitter{
         this._sockets.add(socket);
         let packageParser = new PackageParser();
 
-        packageParser.on('message',(header,body)=>{
-            this.emit('message',header,body);
+        packageParser.on('message',(message)=>{
+            this.emit('message',message);
         });
 
         socket.on('data',(data)=>{

@@ -43,11 +43,11 @@ describe('the agent connection', function () {
         const agent = new AgentConnection();
         agent.connect(9000,'127.0.0.1');
 
-        agent.on('message',(header,data)=>{
+        agent.on('message',({header,body})=>{
             header.version.should.eql(1);
             header.type.should.eql(2);
             header.identity.should.eql(10);
-            data.toString().should.eql('Hello World');
+            body.toString().should.eql('Hello World');
 
             agent.close();
             done();

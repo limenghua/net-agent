@@ -95,7 +95,8 @@ class LocalConnection extends EventEmitter{
             checksum:0,            
             identity:identity,            
         }
-        this.emit('message',header,"");
+
+        this.emit('message',{header:header,body:""});
     }
 
     _onData(socket,data){
@@ -106,7 +107,7 @@ class LocalConnection extends EventEmitter{
             checksum:0,            
             identity:identity
         }
-        this.emit('message',header,data);
+        this.emit('message',{header:header,body:data});
     }
 
     _onEnd(socket){
@@ -127,7 +128,7 @@ class LocalConnection extends EventEmitter{
             checksum:0,
             identity,identity
         };
-        this.emit('message',header,"");    
+        this.emit('message',{header:header,body:""});    
     }
 
     _createIdentity(socket){

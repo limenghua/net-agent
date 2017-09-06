@@ -46,7 +46,7 @@ describe('the service-agent',function(){
             packageParser.handleData(data);
         });
 
-        packageParser.on('message',(header,body)=>{
+        packageParser.on('message',({header,body})=>{
             header.type.should.eql(PackageType.DATA);
             header.identity.should.eql(1);
             body.toString().should.eql('Hello World');

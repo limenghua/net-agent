@@ -14,11 +14,11 @@ class ClientAgent{
         this._localConnection.start();
         this._remoteConnection.start();
 
-        this._localConnection.on('message',(header,body)=>{
+        this._localConnection.on('message',({header,body})=>{
             this._remoteConnection.dispatch(header,body);
         });
 
-        this._remoteConnection.on('message',(header,body)=>{
+        this._remoteConnection.on('message',({header,body})=>{
             this._localConnection.dispatch(header,body);
         });
 

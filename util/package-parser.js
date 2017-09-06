@@ -90,6 +90,7 @@ class PackageParser extends EventEmitter {
         let type = header.get('type');
         let identity = header.get('identity');
 
+        let msgHeader = {version,type,identity};
         
         /**
          * message event.
@@ -100,11 +101,7 @@ class PackageParser extends EventEmitter {
          * @property {number} type - type of the package,value may(DATA:1,CONNECT:2,DISCONNECT:3)
          * @property {number} identity - the identity of the comunity socket.
          */      
-        this.emit('message', {
-            version: version,
-            type: type,
-            identity: identity
-        }, body);
+        this.emit('message', {header:msgHeader,body:body});
     }
 
     /**

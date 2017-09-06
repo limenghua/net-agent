@@ -30,7 +30,7 @@ describe('the RemoteConnection',function(){
         let remoteConnecton = new RemoteConnection(6000);
         remoteConnecton.start();
 
-        remoteConnecton.on('message',(header,body)=>{
+        remoteConnecton.on('message',({header,body})=>{
             header.type.should.eql(PackageType.DATA);
             header.identity.should.eql(1);
             header.version.should.eql(1);

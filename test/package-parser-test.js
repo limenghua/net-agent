@@ -38,7 +38,7 @@ describe('the package parser class', function () {
         let data = Buffer.concat([header, body]);
 
         const packageParser = new PackageParser();
-        packageParser.on('message', (header, body) => {
+        packageParser.on('message', ({header, body}) => {
             header.version.should.eql(1);
             header.type.should.eql(1);
 
@@ -66,7 +66,7 @@ describe('the package parser class', function () {
         header.writeUInt32LE(0, 12);
 
         const packageParser = new PackageParser();
-        packageParser.on('message', (header, body) => {
+        packageParser.on('message', ({header, body}) => {
             header.version.should.eql(1);
             header.type.should.eql(3);
             header.identity.should.eql(5);
@@ -96,7 +96,7 @@ describe('the package parser class', function () {
         header.writeUInt32LE(0, 12);
 
         const packageParser = new PackageParser();
-        packageParser.on('message', (header, body) => {
+        packageParser.on('message', ({header, body}) => {
             header.version.should.eql(1);
             header.type.should.eql(3);
             header.identity.should.eql(5);
@@ -157,7 +157,7 @@ describe('the package parser class', function () {
 
         const packageParser = new PackageParser();
         let nPackage = 0;
-        packageParser.on('message', (header, body) => {
+        packageParser.on('message', ({header, body}) => {
             header.version.should.eql(1);
             header.type.should.eql(2);
             header.identity.should.eql(10);
@@ -193,7 +193,7 @@ describe('the package parser class', function () {
 
         const packageParser = new PackageParser();
         let nPackage = 0;
-        packageParser.on('message', (header, body) => {
+        packageParser.on('message', ({header, body}) => {
             header.version.should.eql(1);
             header.type.should.eql(2);
             header.identity.should.eql(10);
