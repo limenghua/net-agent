@@ -4,7 +4,18 @@ const PackageParser = require('../util/package-parser');
 const PackageType = PackageParser.PackageType;
 const logger = require('../util/logger')
 
+/**
+ * manager the connections witch connect from the costumer side(the service locate).
+ * 
+ * @class RemoteConnection
+ * @extends {EventEmitter}
+ */
 class RemoteConnection extends EventEmitter{
+    /**
+     * Creates an instance of RemoteConnection.
+     * @param {number} port - listen port
+     * @memberof RemoteConnection
+     */
     constructor(port){
         super();
         this._port = port;
@@ -12,10 +23,19 @@ class RemoteConnection extends EventEmitter{
         this._sockets = new Set();
     }
 
+    /**
+     * start the listenner.
+     * 
+     * @memberof RemoteConnection
+     */
     start(){
         this._server.listen(this._port);
 
-        this._server.on('listening',()=>{
+        /**
+        * ready event. once listen start successd,this event emit.
+        * @event RemoteConnection#ready
+        */     
+        this._server.on('listening',()=>{          
             this.emit('ready');
         });
 
@@ -24,6 +44,11 @@ class RemoteConnection extends EventEmitter{
         });
     }
 
+    /**
+     * disconnect all the connection,and stop the listenner.
+     * 
+     * @memberof RemoteConnection
+     */
     stop(){
         for(let socket of this._sockets){
             socket.end();
@@ -32,6 +57,13 @@ class RemoteConnection extends EventEmitter{
         this._server.close();
     }
 
+    /**
+     * dispatch the package.
+     * 
+     * @param {object} header 
+     * @param {Buffer|string} body 
+     * @memberof RemoteConnection
+     */
     dispatch(header,body){
         logger.headerlog(header,'remote-connection');
         let identity = header.identity;

@@ -11,6 +11,13 @@ function createIdentity(){
     return nextIdentity;
 }
 
+/**
+ * 负责接受本地使用者的连接，维护所有的连接信息。
+ * 负责同RemoteConnection之间上下转发数据
+ * 
+ * @class LocalConnection
+ * @extends {EventEmitter}
+ */
 class LocalConnection extends EventEmitter{
     constructor(port){
         super();
@@ -19,6 +26,11 @@ class LocalConnection extends EventEmitter{
         this._port = port;
     }
 
+    /**
+     * start the listenner
+     * 
+     * @memberof LocalConnection
+     */
     start(){
         this._server.listen(this._port);
         
@@ -43,6 +55,11 @@ class LocalConnection extends EventEmitter{
         });
     }
 
+    /**
+     * disconnect all connection,stop the listener
+     * 
+     * @memberof LocalConnection
+     */
     stop(){
         for(let [identiti,socket] of this._sockets){
             socket.end();
@@ -51,6 +68,13 @@ class LocalConnection extends EventEmitter{
         this._server.close();
     }
 
+    /**
+     * dipatch the package to the correct customer socket.
+     * 
+     * @param {object} header 
+     * @param {Buffer|string} body 
+     * @memberof LocalConnection
+     */
     dispatch(header,body){
         logger.headerlog(header,'local-connection');        
         let identity = header.identity;

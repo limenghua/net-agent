@@ -96,10 +96,9 @@ class PackageParser extends EventEmitter {
          * message event.
          *
          * @event PackageParser#message
-         * @type {object|Buffer}
-         * @property {number} version - version of the protocol.
-         * @property {number} type - type of the package,value may(DATA:1,CONNECT:2,DISCONNECT:3)
-         * @property {number} identity - the identity of the comunity socket.
+         * @type {object}
+         * @property {object} header - the package header,include {version,type,identity} field.
+         * @property {Buffer|string} body - the package body,is the payload of package.
          */      
         this.emit('message', {header:msgHeader,body:body});
     }
