@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: to-client-agent/local-connection.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: to-client-agent/local-connection.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>const net = require('net');
+const EventEmitter = require('events');
+const PackageParser = require('../util/package-parser');
+const PackageType = PackageParser.PackageType;
+const logger = require('../util/logger');
+
+let nextIdentity = 1;
+
+function createIdentity(){
+    nextIdentity ++;
+    return nextIdentity;
+}
+
+/**
+ * 负责接受本地使用者的连接，维护所有的连接信息。
+ * 负责同RemoteConnection之间上下转发数据
+ * 
+ * @class LocalConnection
+ * @extends {EventEmitter}
+ */
+class LocalConnection extends EventEmitter{
+    constructor(port){
+        super();
+        this._sockets = new Map();
+        this._server = new net.Server();
+        this._port = port;
+    }
+
+    /**
+     * start the listenner
+     * 
+     * @memberof LocalConnection
+     */
+    start(){
+        this._server.listen(this._port);
+        
+        this._server.on('listening',()=>{
+            this.emit('ready');
+        });
+
+        this._server.on('connection',(socket)=>{
+            this._handleConnection(socket);
+
+            socket.on('data',(data)=>{
+                this._onData(socket,data);
+            });
+
+            socket.on('end',()=>{
+                this._onEnd(socket);
+            });
+
+            socket.on('error',(err)=>{
+                this._onError(socket,err);
+            });
+        });
+    }
+
+    /**
+     * disconnect all connection,stop the listener
+     * 
+     * @memberof LocalConnection
+     */
+    stop(){
+        for(let [identiti,socket] of this._sockets){
+            socket.end();
+        }
+        this._sockets.clear();
+        this._server.close();
+    }
+
+    /**
+     * dipatch the package to the correct customer socket.
+     * 
+     * @param {object} header 
+     * @param {Buffer|string} body 
+     * @memberof LocalConnection
+     */
+    dispatch(header,body){
+        logger.headerlog(header,'local-connection');        
+        let identity = header.identity;
+        let type = header.type;
+
+        switch(type){
+        case PackageType.DATA:
+            this._dispatch(identity,body);
+            break;
+        case PackageType.DISCONNECTED:
+            _disconnect(identity);
+            break;
+        };
+    }
+
+    _dispatch(identity,body){
+        let socket = this._sockets.get(identity);
+        if(socket){
+            socket.write(body);
+        }
+    }
+
+    _disconnect(identity){
+        let socket = this._sockets.get(identity);
+        if(socket){
+            socket.end();
+        }
+    }
+
+    _handleConnection(socket){
+        let identity = createIdentity(socket);
+        socket.identity = identity;
+        this._sockets.set(identity,socket);
+
+        this._onConnect(identity,socket);
+    }
+
+    _onConnect(identity,socket){
+        let header = {
+            version:1,
+            type:PackageType.CONNECTED,
+            checksum:0,            
+            identity:identity,            
+        }
+
+        this.emit('message',{header:header,body:""});
+    }
+
+    _onData(socket,data){
+        let identity = socket.identity;
+        let header ={
+            version:1,
+            type:PackageType.DATA,
+            checksum:0,            
+            identity:identity
+        }
+        this.emit('message',{header:header,body:data});
+    }
+
+    _onEnd(socket){
+        this._deleteConnection(socket);
+    }
+
+    _onError(socket){
+        this._deleteConnection(socket);
+    }
+
+    _deleteConnection(socket){
+        let identity = socket.identity;
+        this._sockets.delete(identity);
+
+        let header ={
+            version:1,
+            type:PackageType.DISCONNECTED,
+            checksum:0,
+            identity,identity
+        };
+        this.emit('message',{header:header,body:""});    
+    }
+
+    _createIdentity(socket){
+        return createIdentity();
+    }
+}
+
+module.exports = LocalConnection;
+
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="AgentConnection.html">AgentConnection</a></li><li><a href="ClientAgent.html">ClientAgent</a></li><li><a href="ClientAgent.ClientAgent.html">ClientAgent</a></li><li><a href="ConnectionPool.html">ConnectionPool</a></li><li><a href="ConnectionPool.ConnectionPool.html">ConnectionPool</a></li><li><a href="LocalConnection.html">LocalConnection</a></li><li><a href="PackageParser.html">PackageParser</a></li><li><a href="PackageParser.PackageParser.html">PackageParser</a></li><li><a href="RemoteConnection.html">RemoteConnection</a></li><li><a href="RemoteConnection.RemoteConnection.html">RemoteConnection</a></li><li><a href="ServiceAgent.html">ServiceAgent</a></li><li><a href="ServiceAgent.ServiceAgent.html">ServiceAgent</a></li><li><a href="ServiceConnection.html">ServiceConnection</a></li></ul><h3>Events</h3><ul><li><a href="PackageParser.html#event:message">message</a></li><li><a href="RemoteConnection.html#event:ready">ready</a></li></ul><h3>Global</h3><ul><li><a href="global.html#createAgent">createAgent</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.4</a> on Wed Sep 06 2017 16:06:52 GMT+0800 (China Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

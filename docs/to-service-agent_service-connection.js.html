@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: to-service-agent/service-connection.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: to-service-agent/service-connection.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>const net = require('net');
+const EventEmitter = require('events');
+const PackageParser = require('../util/package-parser');
+const PackageType = PackageParser.PackageType;
+const logger = require('../util/logger');
+
+
+/**
+ * The tcp connection pool,to prepare many connection for after use.
+ * 
+ * @class ConnectionPool
+ * @extends {EventEmitter}
+ */
+class ConnectionPool extends EventEmitter{
+
+    /**
+     * Creates an instance of ConnectionPool.
+     * @param {number} port of the service to connect
+     * @param {string} host of the service to connect,use ip address
+     * @param {object} option  {opt.poolSize:default 100}
+     * @memberof ConnectionPool
+     */
+    constructor(port, host, opt) {
+        super();
+
+        this.servicePort = port;
+        this.serviceHost = host;
+        this.opt = opt || {};
+        this.opt.poolSize = this.opt.poolSize || 100;
+
+        this.sockets = new Set();
+
+        this.started = false;
+    }
+
+    /**
+     * create connections and connect to service
+     * 
+     * @memberof ConnectionPool
+     */
+    create() {
+        for (let i = 0; i &lt; this.opt.poolSize; i++) {
+            this._addOneConnection();
+        }
+    }
+
+    /**
+     * disconnect all connections
+     * 
+     * @memberof ConnectionPool
+     */
+    destroye(){
+        for(let socket of this.sockets){
+            if(! socket.destroyed){
+                socket.destroy();
+            }
+        }
+
+        this.sockets.clear();
+    }
+
+    _addOneConnection() {
+        if(this.sockets.size >= this.opt.poolSize)return;
+
+        let socket = new net.Socket();
+        socket.connect(this.servicePort, this.serviceHost);
+        socket.on('connect', () => {
+            //console.log('socket connected');
+            this.sockets.add(socket);
+            if(! this.started &amp;&amp; this.sockets.size === this.opt.poolSize){
+                this.started = true;
+                this.emit('ready');
+            }
+        });
+
+        socket.on('end', () => {
+            this.sockets.delete(socket);
+            setTimeout(()=> {
+                //this._addOneConnection();      
+            }, 100); 
+
+            console.log('socket end');
+
+        });
+
+        socket.on('error', (err) => {
+            this.sockets.delete(socket);
+            setTimeout(()=> {
+                //this._addOneConnection();      
+            }, 100); 
+
+            console.log('socket error:',err);
+        });
+    }
+    
+
+    /**
+     * pick one connection in the pool,delete connection from pool and create new one put into it.
+     * 
+     * @returns net.Socket
+     * @memberof ConnectionPool
+     */
+    pickOneConnection() {
+        let socket = null;
+        for (let sock of this.sockets) {
+            socket = sock;
+            break;
+        }
+
+        this._addOneConnection();
+
+        if (socket !== null) {
+            this.sockets.delete(socket);
+        }
+
+        return socket;
+    }
+
+
+    /**
+     * the count of connections witch in use.
+     * 
+     * @returns number
+     * @memberof ConnectionPool
+     */
+    connectionSize() {
+        return this.sockets.size;
+    }
+}
+
+
+/**
+ * the service connection manager.
+ * contain many connection to the certain service, ex some server
+ * 
+ * @class ServiceConnection
+ * @extends {EventEmitter}
+ */
+class ServiceConnection extends EventEmitter {
+    constructor() {
+        super();
+        this._socketMap = new Map();
+        this._connectionPool = null;
+    }
+
+
+    /**
+     * connect to the service
+     * 
+     * @param {number} port of service 
+     * @param {string} host of service,in normal ,is the ip address.
+     * @memberof ServiceConnection
+     */
+    connect(port, host) {
+        this._connectionPool = new ConnectionPool(port,host);
+        this._connectionPool.create();
+        this._connectionPool.on('ready',()=>{
+            this.emit('ready');
+        });
+    }
+
+    
+    /**
+     * close all connection,and destroy the connection pool.
+     * 
+     * @memberof ServiceConnection
+     */
+    close(){
+        this._connectionPool.destroye();
+        this._started = false;
+
+        for(let [identity,socket] of this._socketMap){
+            socket.end();
+        }
+    }
+
+
+    /**
+     * dispatch the package witch recieve from extenal 
+     * 
+     * @param {object} header 
+     * @param {Buffer | string} body 
+     * @memberof ServiceConnection
+     */
+    dispatch(header,body){
+        logger.headerlog(header,'service-connection');
+        let identity = header.identity;
+        let type = header.type;
+
+        switch(type){
+            case PackageType.DATA:
+                this._dispatch(identity,body);
+                break;
+            case PackageType.CONNECTED:
+                this._createConnection(identity);
+                break;
+            case PackageType.DISCONNECTED:
+                this._deleteConnection(identity);
+                break;
+            default:
+                break;
+        }
+    }
+
+    _handleData(socket,data){
+        let identity = socket.identity;
+        let header = {version:1,type:PackageType.DATA,identity:identity};
+        this.emit('message',{header:header,body:data});
+    }
+
+    _dispatch(identity,body){
+        if(! this._socketMap.has(identity)){
+            return this._dispatchError(indentity,'no connection exsist');
+        }
+
+        let socket = this._socketMap.get(identity);
+        socket.write(body);
+    }
+
+    _createConnection(identity){
+        let socket = this._connectionPool.pickOneConnection();
+        socket.identity = identity;
+        this._socketMap.set(identity,socket);
+
+        socket.on('end',()=>{
+            this._deleteConnection(identity);
+        })
+        socket.on('error',()=>{
+            this._deleteConnection(identity);
+        });
+        socket.on('data',(data)=>{
+            this._handleData(socket,data);
+        });
+    }
+
+    _deleteConnection(identity){
+        if(! this._socketMap.has(identity)){
+            return this._dispatchError(identity,'no connection exsist when delete');
+        }
+
+        let socket = this._socketMap.get(identity);
+        this._socketMap.delete(identity);
+
+        if(! socket.destroyed){
+            socket.end();
+        }
+    }
+
+    _dispatchError(identity,err){
+
+    }
+
+};
+
+ServiceConnection.ConnectionPool = ConnectionPool;
+
+module.exports = ServiceConnection;</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="AgentConnection.html">AgentConnection</a></li><li><a href="ClientAgent.html">ClientAgent</a></li><li><a href="ClientAgent.ClientAgent.html">ClientAgent</a></li><li><a href="ConnectionPool.html">ConnectionPool</a></li><li><a href="ConnectionPool.ConnectionPool.html">ConnectionPool</a></li><li><a href="LocalConnection.html">LocalConnection</a></li><li><a href="PackageParser.html">PackageParser</a></li><li><a href="PackageParser.PackageParser.html">PackageParser</a></li><li><a href="RemoteConnection.html">RemoteConnection</a></li><li><a href="RemoteConnection.RemoteConnection.html">RemoteConnection</a></li><li><a href="ServiceAgent.html">ServiceAgent</a></li><li><a href="ServiceAgent.ServiceAgent.html">ServiceAgent</a></li><li><a href="ServiceConnection.html">ServiceConnection</a></li></ul><h3>Events</h3><ul><li><a href="PackageParser.html#event:message">message</a></li><li><a href="RemoteConnection.html#event:ready">ready</a></li></ul><h3>Global</h3><ul><li><a href="global.html#createAgent">createAgent</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.4</a> on Wed Sep 06 2017 16:06:52 GMT+0800 (China Standard Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
