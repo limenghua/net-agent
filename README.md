@@ -1,5 +1,10 @@
-# (GitHub-Flavored) Markdown Editor
+# 一种将内网的服务通过代理暴露到其他网络的一种实现
 
+一般来说，服务需要有一个确定的地址和端口，由外部来进行连接，所以大部分都部署在Server端。
+但有时，Server端的一些功能反而需要客户端环境提供的一些服务，在客户内网，主机地址和端口对外网一般是隐藏的。
+没有特殊的设置很难连接到内网地址。
+
+通过在客户内网和外部Server网络分别部署两个代理程序，来联通Service和使用程序。
 
 * document link:https://limenghua.github.io/net-agent/
 
