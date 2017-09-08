@@ -5,17 +5,15 @@ const Struct = require('struct');
 
 /**
  * the Package parser.
- *  package struct.
- *  <ul>
- *<li>     0       8         16       24       32.
- *<li>    |--------|--------|--------|--------|.
- *<li>    |version |  type  |   checksum      |.
- *<li>    |       body lenght                 |.
- *<li>    |          identity...              |.
- *<li>    |          identity                 |.
- *<li>    |          user data body...        | .
- * </ul>
- * 
+ * @example Package struct
+ *    0       8         16       24       32
+ *    |--------|--------|--------|--------|
+ *    |version |  type  |   checksum      |
+ *    |       body lenght                 |
+ *    |          identity...              |
+ *    |          identity                 |
+ *    |          user data body...        |
+ *    |          ... ...                  | 
  * @class PackageParser
  * @extends {EventEmitter}
  */

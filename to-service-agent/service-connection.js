@@ -76,7 +76,7 @@ class ConnectionPool extends EventEmitter{
         socket.on('end', () => {
             this.sockets.delete(socket);
             setTimeout(()=> {
-                //this._addOneConnection();      
+                //this._addOneConnection();
             }, 100); 
 
             console.log('socket end');
